@@ -23,7 +23,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
-        exclude = ['id', 'product']
+        exclude = ['id']
 
 
 class ProductSerializer(serializers.ModelSerializer):
