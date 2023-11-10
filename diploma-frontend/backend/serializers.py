@@ -1,5 +1,21 @@
 from rest_framework import serializers
-from .models import Product, Author, Specification, Tag, ProductImage
+from .models import Product, Author, Specification, Tag, ProductImage, Profile
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['username', 'last_name', 'password', 'email', 'phone', 'avatar']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = Profile(
+            username=validated_data['username'],
+            last_name=validated_data['last_name']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 
 class SpecificationSerializer(serializers.ModelSerializer):
@@ -11,7 +27,7 @@ class SpecificationSerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        exclude = ['id', 'product']
+        exclude = ['product']
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
