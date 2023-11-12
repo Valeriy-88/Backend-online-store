@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'backend.apps.BackendConfig',
     'frontend',
     'rest_framework',
+    'rest_framework.authtoken',
+    "phonenumber_field",
 ]
 
 MIDDLEWARE = [
@@ -132,11 +134,16 @@ MEDIA_ROOT = BASE_DIR / 'frontend' / 'static' / 'frontend' / 'assets' / 'content
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+AUTH_USER_MODEL = 'backend.Profile'
+
 REST_FRAMEWORK = {
     'COERCE_DECIMAL_TO_STRING': False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+            'rest_framework.authentication.TokenAuthentication',
+        ],
 }
 
 LOGGING = {
@@ -156,5 +163,5 @@ LOGGING = {
     },
 }
 
-# LOGIN_REDIRECT_URL = reverse_lazy("")
-# LOGIN_URL = reverse_lazy("")
+LOGIN_REDIRECT_URL = reverse_lazy("backend:profile")
+LOGIN_URL = reverse_lazy("backend:sign-in")

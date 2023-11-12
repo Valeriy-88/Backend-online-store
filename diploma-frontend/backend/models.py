@@ -1,5 +1,7 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class Product(models.Model):
@@ -45,3 +47,19 @@ class Author(models.Model):
     rate = models.SmallIntegerField(default=0)
     date = models.DateTimeField(default=timezone.now)
     product = models.ForeignKey(Product, verbose_name="продукт", on_delete=models.CASCADE, related_name="authors")
+
+
+def profile_preview_directory_path(instance: "Profile", filename: str) -> str:
+    return "profile/preview/{filename}".format(
+        pk=instance.pk,
+        filename=filename,
+    )
+
+
+class Profile(AbstractUser):
+    email = models.EmailField(null=True)
+    phone = PhoneNumberField(null=True, blank=False, unique=True)
+    avatar = models.ImageField(null=True, blank=True, upload_to=profile_preview_directory_path)
+
+    def __str__(self):
+        return self.username
