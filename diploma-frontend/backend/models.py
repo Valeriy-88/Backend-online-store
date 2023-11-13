@@ -50,14 +50,15 @@ class Author(models.Model):
 
 
 def profile_preview_directory_path(instance: "Profile", filename: str) -> str:
-    return "profile/preview/{filename}".format(
+    return "profiles/profile_{pk}/preview/{filename}".format(
         pk=instance.pk,
         filename=filename,
     )
 
 
 class Profile(AbstractUser):
-    email = models.EmailField(null=True)
+    fullName = models.CharField(max_length=200, db_index=True)
+    email = models.EmailField(null=True, unique=True)
     phone = PhoneNumberField(null=True, blank=False, unique=True)
     avatar = models.ImageField(null=True, blank=True, upload_to=profile_preview_directory_path)
 
