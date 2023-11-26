@@ -1,6 +1,9 @@
 from django.contrib.auth import authenticate, login
+from django.core.paginator import Paginator
+from django.shortcuts import render
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.utils import json
 from rest_framework.views import APIView
@@ -9,13 +12,17 @@ from rest_framework.permissions import IsAuthenticated
 
 from .serializers import (
     ProductSerializer,
-    AuthorSerializer,
+    ReviewSerializer,
     TagSerializer,
     UserSerializer,
     PasswordUserSerializer,
     AvatarUserSerializer,
+    CatalogMenuSerializer,
+    CatalogSerializer,
+    CatalogProductsSerializer,
+    SalesSerializer,
 )
-from .models import Product, Tag, Profile
+from .models import Product, Tag, Profile, Catalog
 
 
 class AvatarProfileView(APIView):
@@ -94,6 +101,63 @@ class LoginView(APIView):
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
+class CatalogMenuView(APIView):
+    def get(self, request):
+        product = (
+            Product.objects
+            .prefetch_related("images")
+            .all())
+        serializer = CatalogMenuSerializer(product, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CatalogItemsView(APIView, LimitOffsetPagination):
+    pagination_class = PageNumberPagination
+
+    def get(self, request):
+        catalog = Catalog.objects.all()
+        paginated_queryset = self.paginate_queryset(catalog, request)
+        serializer = CatalogSerializer(paginated_queryset, many=True)
+        return self.get_paginated_response(serializer.data)
+
+
+class ProductPopularView(APIView):
+    def get(self, request):
+        product = (
+            Product.objects
+            .prefetch_related("specifications", "tags", "images", "reviews")
+            .all())
+        serializer = CatalogProductsSerializer(product, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ProductLimitedView(APIView):
+    def get(self, request):
+        product = (
+            Product.objects
+            .prefetch_related("specifications", "tags", "images", "reviews")
+            .all())
+        serializer = CatalogProductsSerializer(product, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SalesView(APIView):
+    def get(self, request):
+        catalog = Catalog.objects.all()
+        serializer = SalesSerializer(catalog, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class BannersView(APIView):
+    def get(self, request):
+        product = (
+            Product.objects
+            .prefetch_related("specifications", "tags", "images", "reviews")
+            .all())
+        serializer = CatalogProductsSerializer(product, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class TagsListView(APIView):
     def get(self, request):
         tag = Tag.objects.all()
@@ -101,13 +165,12 @@ class TagsListView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ProductsListView(APIView):
+class ProductDetailView(APIView):
     def get(self, request, id):
         product = (
-            Product.objects
-            # .select_related("authors")
-            .prefetch_related("specifications", "tags", "images")
-            .filter(id=id))
+                Product.objects
+                .prefetch_related("specifications", "tags", "images", "reviews")
+                .filter(id=id))
         serializer = ProductSerializer(product, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -115,7 +178,7 @@ class ProductsListView(APIView):
 class ReviewCreateView(APIView):
     def post(self, request, id):
         request.data['product'] = id
-        review = AuthorSerializer(data=request.data)
+        review = ReviewSerializer(data=request.data)
         if review.is_valid():
             review.save()
         return Response(status=status.HTTP_201_CREATED)

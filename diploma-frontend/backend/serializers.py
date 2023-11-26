@@ -1,5 +1,13 @@
 from rest_framework import serializers
-from .models import Product, Author, Specification, Tag, ProductImage, Profile
+from .models import (
+    Product,
+    Review,
+    Specification,
+    Tag,
+    ProductImage,
+    Profile,
+    Catalog,
+)
 
 
 class AvatarUserSerializer(serializers.ModelSerializer):
@@ -70,15 +78,15 @@ class ProductImageSerializer(serializers.ModelSerializer):
         exclude = ['id', 'product']
 
 
-class AuthorSerializer(serializers.ModelSerializer):
+class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Author
+        model = Review
         exclude = ['id']
 
 
 class ProductSerializer(serializers.ModelSerializer):
     date = serializers.DateTimeField(format="%A %B %d %Y %H:%M:%S")
-    authors = AuthorSerializer(many=True)
+    reviews = ReviewSerializer(many=True)
     specifications = SpecificationSerializer(many=True)
     tags = serializers.SlugRelatedField(
         many=True,
@@ -86,9 +94,80 @@ class ProductSerializer(serializers.ModelSerializer):
         slug_field='name'
     )
     images = ProductImageSerializer(many=True)
+    catalog_id = serializers.IntegerField(default=1)
 
     class Meta:
         model = Product
         fields = ('id', 'category', 'price', 'count', 'date', 'title', 'description', 'fullDescription',
-                  'freeDelivery', 'images', 'tags', 'authors', 'specifications', 'rating')
+                  'freeDelivery', 'images', 'tags', 'reviews', 'specifications', 'rating', 'catalog_id')
         depth = 1
+
+
+class SubcategorySerializer(serializers.ModelSerializer):
+    images = ProductImageSerializer(many=True)
+
+    class Meta:
+        model = Product
+        fields = ['id', 'title', 'images']
+
+
+class CatalogMenuSerializer(serializers.ModelSerializer):
+    subcategories = SubcategorySerializer(source="*")
+    images = ProductImageSerializer(many=True)
+
+    class Meta:
+        model = Product
+        fields = ['id', 'title', 'images', 'subcategories']
+        depth = 1
+
+
+class CatalogProductsSerializer(serializers.ModelSerializer):
+    date = serializers.DateTimeField(format="%A %B %d %Y %H:%M:%S")
+    reviews = serializers.SerializerMethodField()
+    tags = TagSerializer(many=True)
+    images = ProductImageSerializer(many=True)
+
+    class Meta:
+        model = Product
+        fields = ('id', 'category', 'price', 'count', 'date', 'title', 'description',
+                  'freeDelivery', 'images', 'tags', 'reviews', 'rating')
+        depth = 1
+
+    def get_reviews(self, obj):
+        return obj.reviews.count()
+
+
+class CatalogSerializer(serializers.ModelSerializer):
+    products = CatalogProductsSerializer(many=True)
+
+    class Meta:
+        model = Catalog
+        fields = ['products', 'currentPage', 'lastPage']
+
+
+class FilteredListSerializer(serializers.ListSerializer):
+
+    def to_representation(self, data):
+        data = data.filter(freeDelivery=True)
+        return super(FilteredListSerializer, self).to_representation(data)
+
+
+class SalesProductsSerializer(serializers.ModelSerializer):
+    dateFrom = serializers.DateField(format="%m-%d")
+    dateTo = serializers.DateField(format="%m-%d")
+    images = ProductImageSerializer(many=True)
+
+    class Meta:
+        list_serializer_class = FilteredListSerializer
+        model = Product
+        fields = ('id', 'price', 'silePrice', 'dateFrom', 'dateTo', 'title', 'images')
+        depth = 1
+
+
+class SalesSerializer(serializers.ModelSerializer):
+    products = SalesProductsSerializer(many=True)
+
+    class Meta:
+        model = Catalog
+        fields = ['products', 'currentPage', 'lastPage']
+
