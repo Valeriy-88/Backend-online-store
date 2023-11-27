@@ -9,7 +9,7 @@ class Catalog(models.Model):
     lastPage = models.SmallIntegerField(default=2)
 
 
-class Product(models.Model):
+class Item(models.Model):
     category = models.SmallIntegerField(default=1)
     price = models.DecimalField(default=1, max_digits=8, decimal_places=2)
     count = models.SmallIntegerField(default=1)
@@ -22,31 +22,31 @@ class Product(models.Model):
     silePrice = models.DecimalField(default=1, max_digits=8, decimal_places=2)
     dateFrom = models.DateField(null=True, blank=True)
     dateTo = models.DateField(null=True, blank=True)
-    catalog = models.ForeignKey(Catalog, verbose_name='каталог', on_delete=models.CASCADE, related_name='products')
+    catalog = models.ForeignKey(Catalog, verbose_name='каталог', on_delete=models.CASCADE, related_name='items')
 
 
 class Specification(models.Model):
     name = models.CharField(max_length=40)
     value = models.CharField(max_length=40)
-    product = models.ManyToManyField(Product, related_name='specifications')
+    item = models.ManyToManyField(Item, related_name='specifications')
 
 
 class Tag(models.Model):
     name = models.CharField(max_length=40)
-    product = models.ManyToManyField(Product, related_name='tags')
+    item = models.ManyToManyField(Item, related_name='tags')
 
 
-def product_images_directory_path(instance: "ProductImage", filename: str) -> str:
-    return "products/product_{pk}/images/{filename}".format(
-        pk=instance.product.pk,
+def item_images_directory_path(instance: "ItemImage", filename: str) -> str:
+    return "items/item_{pk}/images/{filename}".format(
+        pk=instance.item.pk,
         filename=filename,
     )
 
 
-class ProductImage(models.Model):
-    image = models.ImageField(upload_to=product_images_directory_path)
-    description = models.CharField(max_length=200, blank=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
+class ItemImage(models.Model):
+    src = models.ImageField(upload_to=item_images_directory_path)
+    alt = models.CharField(max_length=200, blank=True)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="images")
 
 
 class Review(models.Model):
@@ -55,7 +55,7 @@ class Review(models.Model):
     text = models.TextField(max_length=5000)
     rate = models.SmallIntegerField(default=0)
     date = models.DateTimeField(default=timezone.now)
-    product = models.ForeignKey(Product, verbose_name="продукт", on_delete=models.CASCADE, related_name="reviews")
+    item = models.ForeignKey(Item, verbose_name="продукт", on_delete=models.CASCADE, related_name="reviews")
 
 
 def profile_preview_directory_path(instance: "Profile", filename: str) -> str:

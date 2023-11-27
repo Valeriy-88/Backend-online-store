@@ -11,7 +11,7 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from rest_framework.permissions import IsAuthenticated
 
 from .serializers import (
-    ProductSerializer,
+    ItemSerializer,
     ReviewSerializer,
     TagSerializer,
     UserSerializer,
@@ -19,10 +19,10 @@ from .serializers import (
     AvatarUserSerializer,
     CatalogMenuSerializer,
     CatalogSerializer,
-    CatalogProductsSerializer,
+    CatalogItemsSerializer,
     SalesSerializer,
 )
-from .models import Product, Tag, Profile, Catalog
+from .models import Item, Tag, Profile, Catalog
 
 
 class AvatarProfileView(APIView):
@@ -103,41 +103,38 @@ class LoginView(APIView):
 
 class CatalogMenuView(APIView):
     def get(self, request):
-        product = (
-            Product.objects
-            .prefetch_related("images")
-            .all())
-        serializer = CatalogMenuSerializer(product, many=True)
+        item = (
+                Item.objects
+                .prefetch_related("images")
+                .all())
+        serializer = CatalogMenuSerializer(item, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CatalogItemsView(APIView, LimitOffsetPagination):
-    pagination_class = PageNumberPagination
-
+class CatalogItemsView(APIView):
     def get(self, request):
         catalog = Catalog.objects.all()
-        paginated_queryset = self.paginate_queryset(catalog, request)
-        serializer = CatalogSerializer(paginated_queryset, many=True)
-        return self.get_paginated_response(serializer.data)
+        serializer = CatalogSerializer(catalog, many=True)
+        return Response(*serializer.data, status=status.HTTP_200_OK)
 
 
-class ProductPopularView(APIView):
+class ItemPopularView(APIView):
     def get(self, request):
-        product = (
-            Product.objects
+        item = (
+            Item.objects
             .prefetch_related("specifications", "tags", "images", "reviews")
             .all())
-        serializer = CatalogProductsSerializer(product, many=True)
+        serializer = CatalogItemsSerializer(item, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ProductLimitedView(APIView):
+class ItemLimitedView(APIView):
     def get(self, request):
-        product = (
-            Product.objects
+        item = (
+            Item.objects
             .prefetch_related("specifications", "tags", "images", "reviews")
             .all())
-        serializer = CatalogProductsSerializer(product, many=True)
+        serializer = CatalogItemsSerializer(item, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -145,16 +142,16 @@ class SalesView(APIView):
     def get(self, request):
         catalog = Catalog.objects.all()
         serializer = SalesSerializer(catalog, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(*serializer.data, status=status.HTTP_200_OK)
 
 
 class BannersView(APIView):
     def get(self, request):
-        product = (
-            Product.objects
+        item = (
+            Item.objects
             .prefetch_related("specifications", "tags", "images", "reviews")
             .all())
-        serializer = CatalogProductsSerializer(product, many=True)
+        serializer = CatalogItemsSerializer(item, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -165,19 +162,30 @@ class TagsListView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ProductDetailView(APIView):
+class ItemDetailView(APIView):
     def get(self, request, id):
-        product = (
-                Product.objects
+        item = (
+                Item.objects
                 .prefetch_related("specifications", "tags", "images", "reviews")
                 .filter(id=id))
-        serializer = ProductSerializer(product, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = ItemSerializer(item, many=True)
+        # print("*" * 50)
+        # print(*serializer.data)
+        print("*" * 50)
+        return Response(*serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, id):
+        item = ItemSerializer(data=request.data)
+        print(item)
+        if item.is_valid():
+            item.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response({"status": "error", "data": item.errors})
 
 
 class ReviewCreateView(APIView):
     def post(self, request, id):
-        request.data['product'] = id
+        request.data['item'] = id
         review = ReviewSerializer(data=request.data)
         if review.is_valid():
             review.save()

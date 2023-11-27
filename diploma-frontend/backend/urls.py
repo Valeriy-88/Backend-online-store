@@ -3,7 +3,7 @@ from django.urls import path
 
 from .views import (
     TagsListView,
-    ProductDetailView,
+    ItemDetailView,
     ReviewCreateView,
     RegisterView,
     LoginView,
@@ -12,8 +12,8 @@ from .views import (
     AvatarProfileView,
     CatalogMenuView,
     CatalogItemsView,
-    ProductPopularView,
-    ProductLimitedView,
+    ItemPopularView,
+    ItemLimitedView,
     SalesView,
     BannersView,
 )
@@ -29,11 +29,11 @@ urlpatterns = [
     path('profile/avatar', AvatarProfileView.as_view(), name='profile_avatar'),
     path('categories/', CatalogMenuView.as_view(), name='categories'),
     path('catalog/', CatalogItemsView.as_view(), name='catalog'),
-    path('products/popular/', ProductPopularView.as_view(), name='products_popular'),
-    path('products/limited/', ProductLimitedView.as_view(), name='products_limited'),
+    path('products/popular/', ItemPopularView.as_view(), name='products_popular'),
+    path('products/limited/', ItemLimitedView.as_view(), name='products_limited'),
     path('sales/', SalesView.as_view(), name='sales'),
     path('banners/', BannersView.as_view(), name='banners'),
     path('tags/', TagsListView.as_view(), name='tags'),
-    path('product/<int:id>/', ProductDetailView.as_view(), name='product_id'),
+    path('product/<int:id>/', ItemDetailView.as_view(), name='product'),
     path('product/<int:id>/review/', ReviewCreateView.as_view(), name='product_id_review'),
 ]

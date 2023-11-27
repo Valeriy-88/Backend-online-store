@@ -1,10 +1,10 @@
 from rest_framework import serializers
 from .models import (
-    Product,
+    Item,
     Review,
     Specification,
     Tag,
-    ProductImage,
+    ItemImage,
     Profile,
     Catalog,
 )
@@ -63,19 +63,19 @@ class UserSerializer(serializers.ModelSerializer):
 class SpecificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Specification
-        exclude = ['id', 'product']
+        exclude = ['id', 'item']
 
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        exclude = ['product']
+        exclude = ['item']
 
 
-class ProductImageSerializer(serializers.ModelSerializer):
+class ItemImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProductImage
-        exclude = ['id', 'product']
+        model = ItemImage
+        exclude = ['id', 'item']
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -84,7 +84,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         exclude = ['id']
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ItemSerializer(serializers.ModelSerializer):
     date = serializers.DateTimeField(format="%A %B %d %Y %H:%M:%S")
     reviews = ReviewSerializer(many=True)
     specifications = SpecificationSerializer(many=True)
@@ -93,42 +93,42 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only=True,
         slug_field='name'
     )
-    images = ProductImageSerializer(many=True)
+    images = ItemImageSerializer(many=True)
     catalog_id = serializers.IntegerField(default=1)
 
     class Meta:
-        model = Product
+        model = Item
         fields = ('id', 'category', 'price', 'count', 'date', 'title', 'description', 'fullDescription',
                   'freeDelivery', 'images', 'tags', 'reviews', 'specifications', 'rating', 'catalog_id')
         depth = 1
 
 
 class SubcategorySerializer(serializers.ModelSerializer):
-    images = ProductImageSerializer(many=True)
+    images = ItemImageSerializer(many=True)
 
     class Meta:
-        model = Product
+        model = Item
         fields = ['id', 'title', 'images']
 
 
 class CatalogMenuSerializer(serializers.ModelSerializer):
+    images = ItemImageSerializer(many=True)
     subcategories = SubcategorySerializer(source="*")
-    images = ProductImageSerializer(many=True)
 
     class Meta:
-        model = Product
+        model = Item
         fields = ['id', 'title', 'images', 'subcategories']
         depth = 1
 
 
-class CatalogProductsSerializer(serializers.ModelSerializer):
+class CatalogItemsSerializer(serializers.ModelSerializer):
     date = serializers.DateTimeField(format="%A %B %d %Y %H:%M:%S")
     reviews = serializers.SerializerMethodField()
     tags = TagSerializer(many=True)
-    images = ProductImageSerializer(many=True)
+    images = ItemImageSerializer(many=True)
 
     class Meta:
-        model = Product
+        model = Item
         fields = ('id', 'category', 'price', 'count', 'date', 'title', 'description',
                   'freeDelivery', 'images', 'tags', 'reviews', 'rating')
         depth = 1
@@ -138,11 +138,11 @@ class CatalogProductsSerializer(serializers.ModelSerializer):
 
 
 class CatalogSerializer(serializers.ModelSerializer):
-    products = CatalogProductsSerializer(many=True)
+    items = CatalogItemsSerializer(many=True)
 
     class Meta:
         model = Catalog
-        fields = ['products', 'currentPage', 'lastPage']
+        fields = ['items', 'currentPage', 'lastPage']
 
 
 class FilteredListSerializer(serializers.ListSerializer):
@@ -152,22 +152,22 @@ class FilteredListSerializer(serializers.ListSerializer):
         return super(FilteredListSerializer, self).to_representation(data)
 
 
-class SalesProductsSerializer(serializers.ModelSerializer):
+class SalesItemsSerializer(serializers.ModelSerializer):
     dateFrom = serializers.DateField(format="%m-%d")
     dateTo = serializers.DateField(format="%m-%d")
-    images = ProductImageSerializer(many=True)
+    images = ItemImageSerializer(many=True)
 
     class Meta:
         list_serializer_class = FilteredListSerializer
-        model = Product
+        model = Item
         fields = ('id', 'price', 'silePrice', 'dateFrom', 'dateTo', 'title', 'images')
         depth = 1
 
 
 class SalesSerializer(serializers.ModelSerializer):
-    products = SalesProductsSerializer(many=True)
+    items = SalesItemsSerializer(many=True)
 
     class Meta:
         model = Catalog
-        fields = ['products', 'currentPage', 'lastPage']
+        fields = ['items', 'currentPage', 'lastPage']
 
