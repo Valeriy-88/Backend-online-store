@@ -6,7 +6,7 @@ from .models import (
     Tag,
     ItemImage,
     Profile,
-    Catalog,
+    Catalog, Subcategory,
 )
 
 
@@ -69,7 +69,7 @@ class SpecificationSerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        exclude = ['item']
+        exclude = ['item', 'category']
 
 
 class ItemImageSerializer(serializers.ModelSerializer):
@@ -79,6 +79,8 @@ class ItemImageSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    date = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+
     class Meta:
         model = Review
         exclude = ['id']
@@ -94,12 +96,15 @@ class ItemSerializer(serializers.ModelSerializer):
         slug_field='name'
     )
     images = ItemImageSerializer(many=True)
-    catalog_id = serializers.IntegerField(default=1)
+    category = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='id'
+    )
 
     class Meta:
         model = Item
         fields = ('id', 'category', 'price', 'count', 'date', 'title', 'description', 'fullDescription',
-                  'freeDelivery', 'images', 'tags', 'reviews', 'specifications', 'rating', 'catalog_id')
+                  'freeDelivery', 'images', 'tags', 'reviews', 'specifications', 'rating')
         depth = 1
 
 
@@ -113,10 +118,10 @@ class SubcategorySerializer(serializers.ModelSerializer):
 
 class CatalogMenuSerializer(serializers.ModelSerializer):
     images = ItemImageSerializer(many=True)
-    subcategories = SubcategorySerializer(source="*")
+    subcategories = SubcategorySerializer(many=True)
 
     class Meta:
-        model = Item
+        model = Subcategory
         fields = ['id', 'title', 'images', 'subcategories']
         depth = 1
 
@@ -126,6 +131,10 @@ class CatalogItemsSerializer(serializers.ModelSerializer):
     reviews = serializers.SerializerMethodField()
     tags = TagSerializer(many=True)
     images = ItemImageSerializer(many=True)
+    category = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='id'
+    )
 
     class Meta:
         model = Item
