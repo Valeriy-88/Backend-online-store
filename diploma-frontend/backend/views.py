@@ -1,8 +1,6 @@
 import django_filters
 from django.contrib.auth import authenticate, login
-from django.http import HttpResponse, QueryDict
-from filters.mixins import FiltersMixin
-from rest_framework import status, generics
+from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -14,7 +12,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
-from rest_framework.settings import api_settings
 
 from .serializers import (
     ItemSerializer,
@@ -110,7 +107,6 @@ class LoginView(APIView):
 class CatalogMenuView(APIView):
     def get(self, request):
         subcategory = Subcategory.objects.all()
-        print(subcategory)
         serializer = CatalogMenuSerializer(subcategory, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -130,7 +126,6 @@ class CatalogItemsView(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     serializer_class = CatalogItemsSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    #filterset_class = ItemFilter
     ordering_fields = [
         'rating',
         'price',
@@ -207,7 +202,7 @@ class CatalogItemsView(viewsets.ModelViewSet):
         #print(ser.data)
         s1 = serializer.data[0]
         #s1['items'] = ser.data
-        print(s1)
+        #print(s1)
         return Response(s1, status=status.HTTP_200_OK)
 
 
