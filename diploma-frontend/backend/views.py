@@ -142,6 +142,8 @@ class CatalogItemsView(viewsets.ModelViewSet):
         price_min = self.request.query_params.get('filter[minPrice]')
         price_max = self.request.query_params.get('filter[maxPrice]')
 
+        print(price_min, price_max)
+
         freeDelivery = self.request.query_params.get('filter[freeDelivery]')
         if freeDelivery == '' or freeDelivery is None:
             freeDelivery = True
@@ -186,8 +188,8 @@ class CatalogItemsView(viewsets.ModelViewSet):
             'filter[name]': [''],
             'filter[minPrice]': ['0'],
             'filter[maxPrice]': ['50000'],
-            'filter[freeDelivery]': ['false'],
-            'filter[available]': ['true'],
+            'filter[freeDelivery]': ['False'],
+            'filter[available]': ['True'],
             'currentPage': ['1'],
             'sort': ['price'],
             'sortType': ['inc'],
@@ -199,10 +201,57 @@ class CatalogItemsView(viewsets.ModelViewSet):
         catalog = Catalog.objects.all()
         serializer = CatalogSerializer(catalog, many=True)
 
-        #print(ser.data)
-        s1 = serializer.data[0]
-        #s1['items'] = ser.data
-        #print(s1)
+        # print(ser.data)
+        s1 = {
+            "items": [
+                {
+                    "id": 11,
+                    "images": [
+                        {
+                            "src": "/media//products/images/11/1.jpg.webp",
+                            "alt": "img1"
+                        },
+                        {
+                            "src": "/media//products/images/11/2.jpg.webp",
+                            "alt": "img2"
+                        }
+                    ],
+                    "tags": [
+                        {
+                            "id": 10,
+                            "name": "Со сквозным антенным входом"
+                        }
+                    ],
+                    "specifications": [
+                        {
+                            "id": 29,
+                            "name": "Параметры питания",
+                            "value": "110-240 В/50-60 Гц"
+                        },
+                        {
+                            "id": 30,
+                            "name": "Формат сжатия видео",
+                            "value": "H.264, MPEG4"
+                        }
+                    ],
+                    "reviews": 0,
+                    "price": 12.89,
+                    "rating": 4.1,
+                    "salePrice": 12.89,
+                    "title": "Приставка для цифрового ТВ Cadena CDT-100 черный",
+                    "description": "Приставка для цифрового ТВ Cadena CDT-100 черный [DVB-T, DVB-T2, HDMI, USB, TimeShift]",
+                    "fullDescription": "Приставка для цифрового ТВ Cadena CDT-100 поддерживает стандарты DVB-T и DVB-T2, предоставляя доступ к цифровому эфирному ТВ. Устройство может быть полезно городским и сельским жителям. Приставку можно использовать и на даче. Модель оснащена USB-портом, используемым для обновления программного обеспечения. Благодаря поддержке интерфейсов HDMI и AV приставка совместима с любыми телевизорами. Изображение может выводиться в форматах 4:3 и 16:9.\nПриставка Cadena CDT-100 подключается к сети с помощью компактного внешнего адаптера. В комплекте есть пульт дистанционного управления, батарейки AAA и кабель AV. Кабель HDMI при необходимости приобретается дополнительно. Приставка собрана в миниатюрном черном корпусе, имеющем размеры 87x60x25 мм.",
+                    "count": 10,
+                    "date": "2023-11-04T19:13:02.129000Z",
+                    "freeDelivery": False,
+                    "limited": False,
+                    "active": True,
+                    "category": 6
+                },
+            ],
+            "currentPage": 1,
+            "lastPage": 1
+        }
         return Response(s1, status=status.HTTP_200_OK)
 
 
