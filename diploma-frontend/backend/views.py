@@ -1,9 +1,12 @@
 import django_filters
 from django.contrib.auth import authenticate, login
+from django.db.models import Prefetch
+from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 from rest_framework.utils import json
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -119,12 +122,13 @@ class ItemFilter(filters.FilterSet):
 
     class Meta:
         model = Item
-        fields = ['name', 'price', 'freeDelivery', ]
+        fields = ['name', 'price', 'freeDelivery', 'available']
 
 
 class CatalogItemsView(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     serializer_class = CatalogItemsSerializer
+    filterset_class = ItemFilter
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     ordering_fields = [
         'rating',
@@ -162,48 +166,44 @@ class CatalogItemsView(viewsets.ModelViewSet):
         if sortType == '' or sortType is None:
             sortType = 'inc'
 
-        limit = self.request.query_params.get('limit')
+        limit = int(self.request.query_params.get('limit'))
+        if limit == '' or limit is None:
+            limit = 20
 
         if title is not None:
             queryset = queryset.filter(title=title)
+
         if price_min != 0 or price_max != 50000:
             queryset = queryset.filter(price__range=[price_min, price_max])
+
         if freeDelivery:
             queryset = queryset.filter(freeDelivery=freeDelivery)
+
         else:
             queryset = queryset.filter(freeDelivery=freeDelivery)
+
         if available:
             queryset = queryset.filter(count__gt=0)
         else:
             queryset = queryset.filter(count=0)
+
         if sortType == ['dec']:
             sort = '-' + sort
 
-        return queryset.order_by(sort)[:20]
+        return queryset.order_by(sort)[:limit]
 
     def list(self, request, *args, **kwargs):
-        x = {
-            'filter[name]': [''],
-            'filter[minPrice]': ['0'],
-            'filter[maxPrice]': ['50000'],
-            'filter[freeDelivery]': ['false'],
-            'filter[available]': ['true'],
-            'currentPage': ['1'],
-            'sort': ['price'],
-            'sortType': ['inc'],
-            'limit': ['20']
-        }
         a = dict(request.query_params.lists())
-
-        ser = self.get_serializer(self.get_queryset(), many=True)
         catalog = Catalog.objects.all()
         serializer = CatalogSerializer(catalog, many=True)
+        if a != {}:
+            item = self.get_queryset()
+            serializer_item = CatalogItemsSerializer(item, many=True)
+            catalog_data = serializer.data[0]
+            catalog_data['items'] = serializer_item.data
+            return Response(catalog_data, status=status.HTTP_200_OK)
 
-        #print(ser.data)
-        s1 = serializer.data[0]
-        #s1['items'] = ser.data
-        #print(s1)
-        return Response(s1, status=status.HTTP_200_OK)
+        return Response(*serializer.data, status=status.HTTP_200_OK)
 
 
 class ItemPopularView(APIView):
@@ -259,7 +259,7 @@ class ItemDetailView(APIView):
     def get(self, request, id):
         item = (
             Item.objects
-            .prefetch_related("specifications", "images", "reviews")
+            .prefetch_related("specifications", "images", "reviews", 'tags')
             .filter(id=id))
         serializer = ItemSerializer(item, many=True)
         return Response(*serializer.data, status=status.HTTP_200_OK)
