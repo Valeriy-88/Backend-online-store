@@ -69,7 +69,7 @@ class SpecificationSerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        exclude = ['item', 'category']
+        exclude = ['item', 'category', 'catalog']
 
 
 class ItemImageSerializer(serializers.ModelSerializer):
