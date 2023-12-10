@@ -5,14 +5,35 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 
 class Catalog(models.Model):
+    SORT_VALUES = (
+        ('rating', 'rating'),
+        ('price', 'price'),
+        ('reviews', 'reviews'),
+        ('date', 'date'),
+    )
+
+    SORT_TYPE_VALUES = (
+        ('dec', 'dec'),
+        ('inc', 'inc'),
+    )
+
     class Meta:
         ordering = ['id']
 
     currentPage = models.SmallIntegerField(default=1)
     lastPage = models.SmallIntegerField(default=2)
+    filter = models.JSONField(default=dict)
+    category = models.ForeignKey('Category', on_delete=models.CASCADE, related_name='catalogs')
+    sort = models.CharField(max_length=9,
+                            choices=SORT_VALUES,
+                            default="date")
+    sortType = models.CharField(max_length=9,
+                                choices=SORT_TYPE_VALUES,
+                                default="dec")
+    limit = models.SmallIntegerField(default=20)
 
     def __str__(self) -> str:
-        return f"Catalog(pk={self.pk})"
+        return f"Catalog - {self.pk}"
 
 
 class Category(models.Model):
@@ -39,6 +60,8 @@ class Item(models.Model):
     dateFrom = models.DateField(null=True, blank=True)
     dateTo = models.DateField(null=True, blank=True)
     catalog = models.ForeignKey(Catalog, verbose_name='каталог', on_delete=models.CASCADE, related_name='items')
+    limited = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
 
     def __str__(self) -> str:
         return f"Item(pk={self.pk}, name={self.title!r})"
@@ -52,6 +75,7 @@ class Tag(models.Model):
     name = models.CharField(max_length=40)
     category = models.ForeignKey(Category, verbose_name='категории', on_delete=models.CASCADE, related_name='tags')
     item = models.ManyToManyField(Item, blank=True, related_name='tags')
+    catalog = models.ForeignKey(Catalog, verbose_name='каталог', on_delete=models.CASCADE, related_name='tags')
 
     def __str__(self) -> str:
         return f"{self.name}"
