@@ -56,7 +56,7 @@ class Item(models.Model):
     fullDescription = models.TextField(blank=True, db_index=True)
     freeDelivery = models.BooleanField(default=False)
     rating = models.DecimalField(default=0, max_digits=2, decimal_places=1)
-    silePrice = models.DecimalField(default=1, max_digits=8, decimal_places=2)
+    salePrice = models.DecimalField(default=1, max_digits=8, decimal_places=2)
     dateFrom = models.DateField(null=True, blank=True)
     dateTo = models.DateField(null=True, blank=True)
     catalog = models.ForeignKey(Catalog, verbose_name='каталог', on_delete=models.CASCADE, related_name='items')
@@ -91,7 +91,7 @@ class Specification(models.Model):
 
 
 def item_images_directory_path(instance: "ItemImage", filename: str) -> str:
-    return "items/item_{pk}/images/{filename}".format(
+    return "products/images/{pk}/{filename}".format(
         pk=instance.item.pk,
         filename=filename,
     )

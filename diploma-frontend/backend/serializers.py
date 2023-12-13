@@ -63,7 +63,7 @@ class UserSerializer(serializers.ModelSerializer):
 class SpecificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Specification
-        exclude = ['id', 'item']
+        exclude = ['item']
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -127,7 +127,6 @@ class CatalogMenuSerializer(serializers.ModelSerializer):
 
 
 class CatalogItemsSerializer(serializers.ModelSerializer):
-    date = serializers.DateTimeField(format="%A %B %d %Y %H:%M:%S")
     reviews = serializers.SerializerMethodField()
     tags = TagSerializer(many=True)
     images = ItemImageSerializer(many=True)
@@ -135,11 +134,12 @@ class CatalogItemsSerializer(serializers.ModelSerializer):
         read_only=True,
         slug_field='id'
     )
+    specifications = SpecificationSerializer(many=True)
 
     class Meta:
         model = Item
-        fields = ('id', 'category', 'price', 'count', 'date', 'title', 'description',
-                  'freeDelivery', 'images', 'tags', 'reviews', 'rating')
+        fields = ('id', 'images', 'tags', 'specifications', 'reviews', 'price', 'rating', 'salePrice', 'title',
+                  'description', 'fullDescription', 'count', 'date', 'freeDelivery', 'limited', 'active', 'category')
         depth = 1
 
     def get_reviews(self, obj):
