@@ -3,13 +3,19 @@ from django.urls import path
 
 from .views import (
     TagsListView,
-    ProductsListView,
+    ItemDetailView,
     ReviewCreateView,
     RegisterView,
     LoginView,
     ProfileView,
     PasswordProfileView,
     AvatarProfileView,
+    CatalogMenuView,
+    CatalogItemsView,
+    ItemPopularView,
+    ItemLimitedView,
+    SalesView,
+    BannersView,
 )
 
 app_name = "backend"
@@ -21,13 +27,13 @@ urlpatterns = [
     path('profile', ProfileView.as_view(), name='profile'),
     path('profile/password', PasswordProfileView.as_view(), name='profile_password'),
     path('profile/avatar', AvatarProfileView.as_view(), name='profile_avatar'),
-    # path('categories', , name='categories'),
-    # path('catalog', , name='catalog'),
-    # path('products/popular', , name='products_popular'),
-    # path('products/limited', , name='products_limited'),
-    # path('sales', , name='sales'),
-    # path('banners', , name='banners'),
+    path('categories/', CatalogMenuView.as_view(), name='categories'),
+    path('catalog/', CatalogItemsView.as_view({'get': 'list'}), name='catalog'),
+    path('products/popular/', ItemPopularView.as_view(), name='products_popular'),
+    path('products/limited/', ItemLimitedView.as_view(), name='products_limited'),
+    path('sales/', SalesView.as_view(), name='sales'),
+    path('banners/', BannersView.as_view(), name='banners'),
     path('tags/', TagsListView.as_view(), name='tags'),
-    path('product/<int:id>/', ProductsListView.as_view(), name='product_id'),
+    path('product/<int:id>/', ItemDetailView.as_view(), name='product'),
     path('product/<int:id>/review/', ReviewCreateView.as_view(), name='product_id_review'),
 ]
