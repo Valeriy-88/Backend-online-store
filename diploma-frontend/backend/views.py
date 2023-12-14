@@ -1,12 +1,10 @@
 import django_filters
 from django.contrib.auth import authenticate, login
 from django.db.models import Prefetch
-from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
 from rest_framework.utils import json
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -166,9 +164,8 @@ class CatalogItemsView(viewsets.ModelViewSet):
         if sortType == '' or sortType is None:
             sortType = 'inc'
 
-        limit = int(self.request.query_params.get('limit'))
-        if limit == '' or limit is None:
-            limit = 20
+        limit = int(self.request.query_params.get('limit')) \
+            if self.request.query_params.get('limit') is not None else 20
 
         if title is not None:
             queryset = queryset.filter(title=title)
@@ -190,71 +187,18 @@ class CatalogItemsView(viewsets.ModelViewSet):
         if sortType == ['dec']:
             sort = '-' + sort
 
-        return queryset.order_by(sort)[:limit]
+        queryset = queryset.order_by(sort)
+        return queryset.filter(pk__lte=limit)
 
     def list(self, request, *args, **kwargs):
         a = dict(request.query_params.lists())
-        catalog = Catalog.objects.prefetch_related(Prefetch('items', queryset=Item.objects.filter(title='Laptop')))
-        # catalog = Catalog.objects.all()
+        if a != {}:
+            catalog = Catalog.objects.prefetch_related(Prefetch('items', queryset=self.get_queryset()))
+            serializer = CatalogSerializer(catalog, many=True)
+            return Response(*serializer.data, status=status.HTTP_200_OK)
+
+        catalog = Catalog.objects.all()
         serializer = CatalogSerializer(catalog, many=True)
-        # if a != {}:
-        #     item = self.get_queryset()
-        #     serializer_item = CatalogItemsSerializer(item, many=True)
-        #     catalog_data = serializer.data[0]
-        #     catalog_data['items'] = serializer_item.data
-        #     print(catalog_data)
-        #     return Response(catalog_data, status=status.HTTP_200_OK)
-        s1 = {
-            "items": [
-                {
-                    "id": 11,
-                    "images": [
-                        {
-                            "src": "/media//products/images/11/1.jpg.webp",
-                            "alt": "img1"
-                        },
-                        {
-                            "src": "/media//products/images/11/2.jpg.webp",
-                            "alt": "img2"
-                        }
-                    ],
-                    "tags": [
-                        {
-                            "id": 10,
-                            "name": "Со сквозным антенным входом"
-                        }
-                    ],
-                    "specifications": [
-                        {
-                            "id": 29,
-                            "name": "Параметры питания",
-                            "value": "110-240 В/50-60 Гц"
-                        },
-                        {
-                            "id": 30,
-                            "name": "Формат сжатия видео",
-                            "value": "H.264, MPEG4"
-                        }
-                    ],
-                    "reviews": 0,
-                    "price": 12.89,
-                    "rating": 4.1,
-                    "salePrice": 12.89,
-                    "title": "Приставка для цифрового ТВ Cadena CDT-100 черный",
-                    "description": "Приставка для цифрового ТВ Cadena CDT-100 черный [DVB-T, DVB-T2, HDMI, USB, TimeShift]",
-                    "fullDescription": "Приставка для цифрового ТВ Cadena CDT-100 поддерживает стандарты DVB-T и DVB-T2, предоставляя доступ к цифровому эфирному ТВ. Устройство может быть полезно городским и сельским жителям. Приставку можно использовать и на даче. Модель оснащена USB-портом, используемым для обновления программного обеспечения. Благодаря поддержке интерфейсов HDMI и AV приставка совместима с любыми телевизорами. Изображение может выводиться в форматах 4:3 и 16:9.\nПриставка Cadena CDT-100 подключается к сети с помощью компактного внешнего адаптера. В комплекте есть пульт дистанционного управления, батарейки AAA и кабель AV. Кабель HDMI при необходимости приобретается дополнительно. Приставка собрана в миниатюрном черном корпусе, имеющем размеры 87x60x25 мм.",
-                    "count": 10,
-                    "date": "2023-11-04T19:13:02.129000Z",
-                    "freeDelivery": False,
-                    "limited": False,
-                    "active": True,
-                    "category": 6
-                },
-            ],
-            "currentPage": 1,
-            "lastPage": 1
-        }
-        print(s1)
         return Response(*serializer.data, status=status.HTTP_200_OK)
 
 
