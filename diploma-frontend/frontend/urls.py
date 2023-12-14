@@ -1,8 +1,6 @@
 from django.urls import path
 from django.views.generic import TemplateView
 
-from backend.views import ProductsListView, ReviewCreateView
-
 
 urlpatterns = [
     path('', TemplateView.as_view(template_name="frontend/index.html")),
