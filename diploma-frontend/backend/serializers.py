@@ -63,13 +63,13 @@ class UserSerializer(serializers.ModelSerializer):
 class SpecificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Specification
-        exclude = ['item']
+        exclude = ['id', 'item']
 
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        exclude = ['item', 'category', 'catalog']
+        exclude = ['id', 'item', 'category', 'catalog']
 
 
 class ItemImageSerializer(serializers.ModelSerializer):
@@ -80,21 +80,22 @@ class ItemImageSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     date = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+    item = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Review
         exclude = ['id']
+
+    def to_representation(self, instance):
+        self.fields['item'] = ItemSerializer(read_only=True)
+        return super(ReviewSerializer, self).to_representation(instance)
 
 
 class ItemSerializer(serializers.ModelSerializer):
     date = serializers.DateTimeField(format="%A %B %d %Y %H:%M:%S")
     reviews = ReviewSerializer(many=True)
     specifications = SpecificationSerializer(many=True)
-    tags = serializers.SlugRelatedField(
-        many=True,
-        read_only=True,
-        slug_field='name'
-    )
+    tags = TagSerializer(many=True)
     images = ItemImageSerializer(many=True)
     category = serializers.SlugRelatedField(
         read_only=True,

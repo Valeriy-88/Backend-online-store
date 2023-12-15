@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate, login
 from django.db.models import Prefetch
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.generics import get_object_or_404
+from rest_framework.mixins import CreateModelMixin
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.utils import json
@@ -13,6 +15,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
+import datetime
 
 from .serializers import (
     ItemSerializer,
@@ -26,7 +29,7 @@ from .serializers import (
     CatalogItemsSerializer,
     SalesSerializer,
 )
-from .models import Item, Tag, Profile, Catalog, Subcategory
+from .models import Item, Tag, Profile, Catalog, Subcategory, Review
 
 
 class AvatarProfileView(APIView):
@@ -206,7 +209,7 @@ class ItemPopularView(APIView):
     def get(self, request):
         item = (
             Item.objects
-            .prefetch_related("specifications", "images", "reviews")
+            .prefetch_related("specifications", "images", "reviews", 'tags')
             .all())
         serializer = CatalogItemsSerializer(item, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -216,7 +219,7 @@ class ItemLimitedView(APIView):
     def get(self, request):
         item = (
             Item.objects
-            .prefetch_related("specifications", "images", "reviews")
+            .prefetch_related("specifications", "images", "reviews", 'tags')
             .all())
         serializer = CatalogItemsSerializer(item, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -236,12 +239,26 @@ class SalesView(APIView):
 
 class BannersView(APIView):
     def get(self, request):
+        it = Item.objects.order_by().values_list('id').distinct()
+        #print('\n', it, '\n')
         item = (
             Item.objects
-            .prefetch_related("specifications", "images", "reviews")
+            .prefetch_related("specifications", "images", "reviews", 'tags')
             .all())
+        print('\n ITEM', item, '\n')
         serializer = CatalogItemsSerializer(item, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class BasketView(APIView):
+    def get(self):
+        pass
+
+    def post(self):
+        pass
+
+    def delete(self):
+        pass
 
 
 class TagsListView(APIView):
@@ -256,15 +273,28 @@ class ItemDetailView(APIView):
         item = (
             Item.objects
             .prefetch_related("specifications", "images", "reviews", 'tags')
-            .filter(id=id))
-        serializer = ItemSerializer(item, many=True)
-        return Response(*serializer.data, status=status.HTTP_200_OK)
+            .get(id=id))
+        serializer = ItemSerializer(item)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ReviewCreateView(APIView):
+class ReviewCreateView(CreateModelMixin, APIView):
     def post(self, request, id):
+        current_date = datetime.datetime.now()
+        current_date_string = current_date.strftime("%Y-%m-%d %H:%M")
+        request.data['date'] = current_date_string
         request.data['item'] = id
-        review = ReviewSerializer(data=request.data)
-        if review.is_valid():
-            review.save()
+
+        new_review = Review.objects.create(author=request.data['author'], email=request.data['email'],
+                                           text=request.data['text'], rate=request.data['rate'],
+                                           date=current_date_string, item_id=id)
+        # #print(request.data)
+        # review = ReviewSerializer(data=request.data)
+        # if review.is_valid():
+        #
+        #     #print(review.validated_data)
+        #     print('\n', 'OK ' * 10, '\n')
+        #     review.save()
+        # else:
+        #     print('\n', 'NO ' * 10, '\n')
         return Response(status=status.HTTP_201_CREATED)
