@@ -250,15 +250,15 @@ class BannersView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class BasketView(APIView):
-    def get(self):
-        pass
-
-    def post(self):
-        pass
-
-    def delete(self):
-        pass
+# class BasketView(APIView):
+#     def get(self):
+#         pass
+#
+#     def post(self):
+#         pass
+#
+#     def delete(self):
+#         pass
 
 
 class TagsListView(APIView):
@@ -278,23 +278,21 @@ class ItemDetailView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ReviewCreateView(CreateModelMixin, APIView):
+class ReviewCreateView(APIView):
     def post(self, request, id):
         current_date = datetime.datetime.now()
         current_date_string = current_date.strftime("%Y-%m-%d %H:%M")
         request.data['date'] = current_date_string
         request.data['item'] = id
 
-        new_review = Review.objects.create(author=request.data['author'], email=request.data['email'],
-                                           text=request.data['text'], rate=request.data['rate'],
-                                           date=current_date_string, item_id=id)
-        # #print(request.data)
-        # review = ReviewSerializer(data=request.data)
-        # if review.is_valid():
-        #
-        #     #print(review.validated_data)
-        #     print('\n', 'OK ' * 10, '\n')
-        #     review.save()
-        # else:
-        #     print('\n', 'NO ' * 10, '\n')
+        # new_review = Review.objects.create(author=request.data['author'], email=request.data['email'],
+        #                                    text=request.data['text'], rate=request.data['rate'],
+        #                                    date=current_date_string, item_id=id)
+        #print(request.data)
+        review = ReviewSerializer(data=request.data)
+        if review.is_valid():
+            print('\n', 'OK ' * 10, '\n')
+            review.save()
+        else:
+            print('\n', 'NO ' * 10, '\n')
         return Response(status=status.HTTP_201_CREATED)
