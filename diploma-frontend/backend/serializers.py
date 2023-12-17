@@ -6,7 +6,7 @@ from .models import (
     Tag,
     ItemImage,
     Profile,
-    Catalog, Subcategory,
+    Catalog, Subcategory
 )
 
 
@@ -80,15 +80,10 @@ class ItemImageSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     date = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
-    #item = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Review
         exclude = ['id']
-
-    # def to_representation(self, instance):
-    #     self.fields['item'] = ItemSerializer(read_only=True)
-    #     return super(ReviewSerializer, self).to_representation(instance)
 
 
 class ItemSerializer(serializers.ModelSerializer):

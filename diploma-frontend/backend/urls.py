@@ -10,12 +10,12 @@ from .views import (
     ProfileView,
     PasswordProfileView,
     AvatarProfileView,
-    CatalogMenuView,
+    # CatalogMenuView,
     CatalogItemsView,
     ItemPopularView,
     ItemLimitedView,
     SalesView,
-    BannersView,
+    BannersView, CatalogMenuView,
 )
 
 app_name = "backend"

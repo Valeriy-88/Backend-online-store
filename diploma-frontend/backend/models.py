@@ -5,32 +5,12 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 
 class Catalog(models.Model):
-    SORT_VALUES = (
-        ('rating', 'rating'),
-        ('price', 'price'),
-        ('reviews', 'reviews'),
-        ('date', 'date'),
-    )
-
-    SORT_TYPE_VALUES = (
-        ('dec', 'dec'),
-        ('inc', 'inc'),
-    )
 
     class Meta:
         ordering = ['id']
 
     currentPage = models.SmallIntegerField(default=1)
     lastPage = models.SmallIntegerField(default=2)
-    filter = models.JSONField(default=dict)
-    category = models.ForeignKey('Category', on_delete=models.CASCADE, related_name='catalogs')
-    sort = models.CharField(max_length=9,
-                            choices=SORT_VALUES,
-                            default="date")
-    sortType = models.CharField(max_length=9,
-                                choices=SORT_TYPE_VALUES,
-                                default="dec")
-    limit = models.SmallIntegerField(default=20)
 
     def __str__(self) -> str:
         return f"Catalog - {self.pk}"
@@ -67,7 +47,7 @@ class Item(models.Model):
         return f"Item(pk={self.pk}, name={self.title!r})"
 
 
-class Subcategory(Item):
+class Subcategory(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='subcategories')
 
 

@@ -1,6 +1,6 @@
 import django_filters
 from django.contrib.auth import authenticate, login
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Count
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import get_object_or_404
@@ -29,7 +29,7 @@ from .serializers import (
     CatalogItemsSerializer,
     SalesSerializer,
 )
-from .models import Item, Tag, Profile, Catalog, Subcategory, Review
+from .models import Item, Tag, Profile, Catalog, Subcategory
 
 
 class AvatarProfileView(APIView):
@@ -239,13 +239,13 @@ class SalesView(APIView):
 
 class BannersView(APIView):
     def get(self, request):
-        it = Item.objects.order_by().values_list('id').distinct()
-        #print('\n', it, '\n')
         item = (
             Item.objects
             .prefetch_related("specifications", "images", "reviews", 'tags')
             .all())
-        print('\n ITEM', item, '\n')
+        print(item)
+
+       # print(it)
         serializer = CatalogItemsSerializer(item, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -284,15 +284,9 @@ class ReviewCreateView(APIView):
         current_date_string = current_date.strftime("%Y-%m-%d %H:%M")
         request.data['date'] = current_date_string
         request.data['item'] = id
-
-        # new_review = Review.objects.create(author=request.data['author'], email=request.data['email'],
-        #                                    text=request.data['text'], rate=request.data['rate'],
-        #                                    date=current_date_string, item_id=id)
-        #print(request.data)
         review = ReviewSerializer(data=request.data)
-        if review.is_valid():
-            print('\n', 'OK ' * 10, '\n')
+        if review.is_valid(raise_exception=True):
             review.save()
+            return Response(status=status.HTTP_201_CREATED)
         else:
-            print('\n', 'NO ' * 10, '\n')
-        return Response(status=status.HTTP_201_CREATED)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
