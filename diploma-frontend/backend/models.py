@@ -178,6 +178,12 @@ class Item(models.Model):
         rating = sum(reviews) / reviews.count()
         return rating
 
+    def get_image(self):
+        images = ItemImage.objects.filter(item_id=self.pk)
+        return [
+            {'src': image.src.url, 'atl': image.alt} for image in images
+        ]
+
     def __str__(self):
         return self.title
 
@@ -246,3 +252,52 @@ class BasketItem(models.Model):
     def __str__(self):
         return f'{self.quantity} x {self.item.title}'
 
+
+class Order(models.Model):
+    class Meta:
+        verbose_name = 'Заказ'
+        verbose_name_plural = 'Заказы'
+
+    TYPE_DELIVERY = (
+        ('free', 'Бесплатная доставка'),
+        ('paid', 'Платная доставка'),
+    )
+    TYPE_PAYMENT = (
+        ('online', 'Онлайн картой'),
+        ('online_any', 'Онлайн оплата со случайного счета'),
+    )
+
+    STATUS_ORDER = (
+        ('processing', 'В обработке'),
+        ('awaiting payment', 'Ожидает оплаты'),
+        ('paid', 'Оплачен'),
+        ('in transit', 'В пути'),
+        ('delivered', 'Доставлен'),
+        ('canceled', 'Отменен'),
+    )
+
+    createdAt = models.DateTimeField(auto_now_add=True)
+    profile = models.ForeignKey(
+        Profile, on_delete=models.PROTECT,
+        related_name='profile_order'
+    )
+    deliveryType = models.CharField(
+        max_length=9,
+        choices=TYPE_DELIVERY,
+        default='Тип доставки'
+    )
+    paymentType = models.CharField(
+        max_length=20,
+        choices=TYPE_PAYMENT,
+        default='Тип оплаты'
+    )
+    totalCost = models.DecimalField(
+        default=0, max_digits=10,
+        decimal_places=2
+    )
+    status = models.CharField(max_length=50,
+                              choices=STATUS_ORDER)
+    city = models.CharField(max_length=100)
+    address = models.TextField(null=True, blank=True)
+    products = models.ManyToManyField(Item, related_name="products")
+    basket = models.ForeignKey(Basket, on_delete=models.CASCADE, related_name='orders', default=None)

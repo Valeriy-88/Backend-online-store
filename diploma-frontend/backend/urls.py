@@ -17,6 +17,7 @@ from .views import (
     SalesView,
     BannersView,
     BasketView,
+    OrdersView, OrderDetailView,
 )
 
 app_name = "backend"
@@ -36,6 +37,8 @@ urlpatterns = [
     path('banners/', BannersView.as_view(), name='banners'),
     path('tags/', TagsListView.as_view(), name='tags'),
     path('basket', BasketView.as_view(), name='basket'),
+    path('orders', OrdersView.as_view(), name='orders'),
+    path('order/<int:id>', OrderDetailView.as_view(), name='orders_id'),
     path('product/<int:id>/', ItemDetailView.as_view(), name='product'),
     path('product/<int:id>/reviews', ReviewCreateView.as_view(), name='product_id_reviews'),
 ]
