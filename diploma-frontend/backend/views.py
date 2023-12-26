@@ -3,6 +3,7 @@ from django.db.models import Prefetch, Count
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.utils import json
@@ -24,13 +25,13 @@ from .serializers import (
     CatalogItemsSerializer,
     SalesSerializer,
     BasketItemSerializer,
-    BannerSerializer,
+    BannerSerializer, OrderSerializer,
 )
 from .models import (
     Item, Tag,
     Profile, Catalog,
     Category, Basket,
-    BasketItem, UserAvatar,
+    BasketItem, UserAvatar, Order,
 )
 
 
@@ -375,3 +376,54 @@ class ReviewCreateView(APIView):
             return Response(status=status.HTTP_201_CREATED)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class OrdersView(APIView):
+    def get(self, request, id):
+        queryset = Order.objects.get(id=id)
+        serializer = OrderSerializer(queryset)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        total_cost = 0
+        basket = request.user.baskets
+        profile = Profile.objects.get(id=request.user.id)
+        basket_items = BasketItem.objects.filter(basket__profile=request.user)
+        order = Order.objects.create(basket=basket, profile=profile)
+        for item in basket_items:
+            product = Item.objects.get(pk=item.item.pk)
+            product.count_of_orders = item.quantity
+            total_cost += item.item.price + item.quantity
+            product.save()
+        order.totalCost = total_cost
+        order.save()
+        response_date = {'orderId': order.pk}
+
+        return JsonResponse(response_date)
+
+
+class OrderDetailView(APIView):
+    def get(self, request, id):
+        queryset = Order.objects.get(id=id)
+        serializer = OrderSerializer(queryset)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, id):
+        order = get_object_or_404(Order, id=id)
+
+        deliveryType = request.data['deliveryType'],
+        paymentType = request.data['paymentType'],
+        status = request.data['status'],
+        city = request.data['city'],
+        address = request.data['address']
+
+        order.deliveryType = deliveryType
+        order.paymentType = paymentType
+        order.status = status
+        order.city = city
+        order.address = address
+        order.save()
+
+        response_data = {'orderId': order.id}
+        return Response(response_data, status=200)
+

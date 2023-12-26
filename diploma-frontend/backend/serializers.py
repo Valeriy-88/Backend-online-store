@@ -10,7 +10,7 @@ from .models import (
     Category,
     Subcategory,
     BasketItem,
-    UserAvatar,
+    UserAvatar, Order,
 )
 
 
@@ -207,4 +207,43 @@ class BasketItemSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = ItemSerializer(instance.item).data
         data['count'] = instance.quantity
+        return data
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        profile = instance.profile
+        products = instance.basket.basket_items.all()
+
+        data = {
+            'id': instance.id,
+            'createdAt': instance.createdAt.strftime('%Y.%m.%d %H:%M'),
+            'fullName': f"{profile.fullName}",
+            'email': profile.email,
+            'phone': str(profile.phone),
+            'deliveryType': instance.deliveryType,
+            'paymentType': instance.paymentType,
+            'totalCost': instance.totalCost,
+            'status': instance.status,
+            'city': instance.city,
+            'address': instance.address,
+            'products': [{
+                'id': item.item.pk,
+                'category': item.item.category.pk,
+                'price': item.item.price,
+                'count': item.item.count,
+                'data': item.item.date.strftime('%Y.%m.%d %H:%M'),
+                'title': item.item.title,
+                'description': item.item.description,
+                'freeDelivery': item.item.freeDelivery,
+                'images': item.item.get_image(),
+                'tags': [{'id': tag.id, 'name': tag.name} for tag in item.item.tags.all()],
+                'reviews': Review.objects.filter(item_id=item.item.id).count(),
+                'rating': float(item.item.rating),
+            } for item in products]
+        }
         return data

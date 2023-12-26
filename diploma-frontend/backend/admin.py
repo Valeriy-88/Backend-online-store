@@ -8,7 +8,7 @@ from .models import (
     Subcategory,
     Basket,
     BasketItem,
-    Catalog,
+    Catalog, Order,
 )
 
 
@@ -118,8 +118,10 @@ class BasketItemAdmin(admin.ModelAdmin):
         return BasketItem.objects.prefetch_related('basket', 'item')
 
 
-# @admin.register(Order)
-# class OrderAdmin(admin.ModelAdmin):
-#     list_display = "", "", "", "", "", ""
-#     list_filter = "", "",
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = "pk", "profile", "address", "createdAt", "status"
+    list_display_links = "pk", "profile",
 
+    def get_queryset(self, request):
+        return Order.objects.prefetch_related('items', 'profile', 'basket')
