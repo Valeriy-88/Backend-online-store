@@ -10,7 +10,7 @@ from .models import (
     Category,
     Subcategory,
     BasketItem,
-    UserAvatar, Order,
+    UserAvatar, Order, Payment,
 )
 
 
@@ -216,6 +216,7 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def to_representation(self, instance):
+        print(instance)
         profile = instance.profile
         products = instance.basket.basket_items.all()
 
@@ -247,3 +248,9 @@ class OrderSerializer(serializers.ModelSerializer):
             } for item in products]
         }
         return data
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = '__all__'

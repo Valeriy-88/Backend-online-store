@@ -25,7 +25,7 @@ from .serializers import (
     CatalogItemsSerializer,
     SalesSerializer,
     BasketItemSerializer,
-    BannerSerializer, OrderSerializer,
+    BannerSerializer, OrderSerializer, PaymentSerializer,
 )
 from .models import (
     Item, Tag,
@@ -379,10 +379,14 @@ class ReviewCreateView(APIView):
 
 
 class OrdersView(APIView):
-    def get(self, request, id):
-        queryset = Order.objects.get(id=id)
-        serializer = OrderSerializer(queryset)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get(self, request):
+        orders = Order.objects.filter(profile=request.user.id).values_list('id', flat=True)
+        history_order = []
+        for order_id in orders:
+            queryset = Order.objects.get(id=order_id)
+            serializer = OrderSerializer(queryset)
+            history_order.append(serializer.data)
+        return Response(history_order)
 
     def post(self, request):
         total_cost = 0
@@ -396,6 +400,10 @@ class OrdersView(APIView):
             total_cost += item.item.price + item.quantity
             product.save()
         order.totalCost = total_cost
+        basket_items = BasketItem.objects.filter(basket__profile=request.user).values_list('item_id', flat=True)
+        for item_id in basket_items:
+            item = Item.objects.filter(id=item_id)
+            order.products.add(*item)
         order.save()
         response_date = {'orderId': order.pk}
 
@@ -427,3 +435,21 @@ class OrderDetailView(APIView):
         response_data = {'orderId': order.id}
         return Response(response_data, status=200)
 
+
+class PaymentView(APIView):
+    def post(self, request, id):
+        request.data['order'] = id
+        serializer = PaymentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            basket_items = BasketItem.objects.filter(basket__profile=request.user).values_list('item_id', flat=True)
+            for item_id in basket_items:
+                item = Item.objects.get(id=item_id)
+                product = BasketItem.objects.get(item=item_id)
+                item.count -= product.quantity
+                product.delete()
+                item.save()
+
+            return Response(status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

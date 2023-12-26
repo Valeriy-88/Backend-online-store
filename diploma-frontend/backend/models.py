@@ -301,3 +301,12 @@ class Order(models.Model):
     address = models.TextField(null=True, blank=True)
     products = models.ManyToManyField(Item, related_name="products")
     basket = models.ForeignKey(Basket, on_delete=models.CASCADE, related_name='orders', default=None)
+
+
+class Payment(models.Model):
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='orders')
+    number = models.CharField(max_length=16)
+    name = models.CharField(max_length=200)
+    month = models.CharField(max_length=5)
+    year = models.CharField(max_length=2)
+    code = models.CharField(max_length=3)
