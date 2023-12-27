@@ -25,7 +25,7 @@ from .serializers import (
     CatalogItemsSerializer,
     SalesSerializer,
     BasketItemSerializer,
-    BannerSerializer, OrderSerializer, PaymentSerializer,
+    BannerSerializer, OrderSerializer, PaymentSerializer, RegisterUserSerializer,
 )
 from .models import (
     Item, Tag,
@@ -87,9 +87,11 @@ class RegisterView(APIView):
     def post(self, request):
         data_user = json.loads(request.body)
         data_user['fullName'] = data_user.pop('name')
-        serializer = UserSerializer(data=data_user)
+        serializer = RegisterUserSerializer(data=data_user)
         if serializer.is_valid():
             serializer.save()
+            user = Profile.objects.get(fullName=data_user['fullName'])
+            UserAvatar.objects.create(avatar_id=user.id)
             user = authenticate(request, username=data_user['username'],
                                 password=data_user['password'])
             login(request, user)

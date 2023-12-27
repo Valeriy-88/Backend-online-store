@@ -35,6 +35,23 @@ class PasswordUserSerializer(serializers.ModelSerializer):
         return instance
 
 
+class RegisterUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['username', 'fullName', 'password', 'email', 'phone']
+        extra_kwargs = {'password': {'write_only': True}}
+        depth = 1
+
+    def create(self, validated_data):
+        user = Profile(
+            username=validated_data['username'],
+            fullName=validated_data['fullName']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
+
 class UserSerializer(serializers.ModelSerializer):
     avatar = AvatarUserSerializer()
 
