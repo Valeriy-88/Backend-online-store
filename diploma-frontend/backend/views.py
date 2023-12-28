@@ -399,7 +399,7 @@ class OrdersView(APIView):
         for item in basket_items:
             product = Item.objects.get(pk=item.item.pk)
             product.count_of_orders = item.quantity
-            total_cost += item.item.price + item.quantity
+            total_cost += item.item.price * item.quantity
             product.save()
         order.totalCost = total_cost
         basket_items = BasketItem.objects.filter(basket__profile=request.user).values_list('item_id', flat=True)
